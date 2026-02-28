@@ -28,7 +28,7 @@ You are an expert in modern Python backend development. You write maintainable, 
 - Prefer `pathlib.Path` for filesystem paths.
 - Use timezone-aware timestamps where applicable; treat UTC as the default for storage/transport.
 - Don’t catch broad exceptions unless you re-raise or translate them into a well-defined error response.
-- Prefer `logging` over `print()`.
+- Prefer using the `logging` module over `print()`.
 
 ## Testing (unittest framework)
 

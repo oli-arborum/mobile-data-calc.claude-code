@@ -14,8 +14,12 @@ The command-line data extractor is a Python command-line tool that serves to ext
     1. In the screenshot there is a list of apps with each used mobile data volume below the app name.
     2. In the screenshot there is a list of system services (header "Systemdienste") with each used mobile data volume right of the app name.
   * Both (apps and system services) can be treated the same way. Note, that each numerical value of the app's data volume is followed by a unit (GB, MB, KB), so that before storing the app's data volume in the database it is required to convert it to a uniform and consistent unit. Use 1024 as factor between KB and MB as well as between MB and GB. When the data volume is just a number "bytes" (i.e. <1 KB) the entry can be ignored.
+  * The target unit for storage is **KB** (kilobytes).
+  * Accept both **","** and **"."** as decimal separators in numeric values (German locale uses comma).
+  * Navigable aggregate rows (e.g., "Systemdienste", "Apps nur auf Apple Watch") that link to sub-screens are skipped; only individual sub-items are stored.
   * If the same app entry is contained in two or more screenshot for the same month ignore the surplus entries.
-* Put (at least) the following data in the database: year, month (numeric), app name, data volume.
+* The **database file path** is a CLI argument (not hardcoded).
+* Put (at least) the following data in the database: year, month (numeric), app name, data volume (in KB).
 * If the database file does not exist, create a new one.
 * Report progress on stdout.
 
