@@ -1,3 +1,5 @@
+"""SQLite database operations for storing extracted data usage entries."""
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +28,8 @@ def create_database(db_path: Path) -> None:
 def insert_entries(
     db_path: Path, entries: list[tuple[int, int, str, float]]
 ) -> int:
-    """Insert deduplicated entries into the database.
+    """
+    Insert deduplicated entries into the database.
 
     Deduplication: exact match on (year, month, app_name, data_volume_kb).
     Returns the number of entries inserted.

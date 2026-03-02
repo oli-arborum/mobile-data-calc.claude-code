@@ -1,5 +1,8 @@
+"""OCR extraction of per-app data usage from iOS screenshots."""
+
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 from dataclasses import dataclass
@@ -30,6 +33,8 @@ TITLE_NAMES = {"systemdienste", "mobile datennutzung", "datennutzung"}
 
 @dataclass
 class DataEntry:
+    """Single app data usage entry extracted from a screenshot."""
+
     app_name: str
     data_volume_kb: float
 
@@ -42,7 +47,8 @@ class _WordInfo(TypedDict):
 
 
 def convert_to_kb(value_str: str, unit: str) -> float:
-    """Convert a value string with unit to KB.
+    """
+    Convert a value string with unit to KB.
 
     Handles both "," and "." and "/" as decimal separators.
     """
@@ -51,21 +57,17 @@ def convert_to_kb(value_str: str, unit: str) -> float:
     unit_upper = unit.upper()
     if unit_upper == "GB":
         return value * 1024 * 1024
-    elif unit_upper == "MB":
+    if unit_upper == "MB":
         return value * 1024
-    elif unit_upper == "KB":
+    if unit_upper == "KB":
         return value
-    else:
-        raise ValueError(f"Unknown unit: {unit}")
+    raise ValueError(f"Unknown unit: {unit}")
 
 
 def _should_skip_line(line: str) -> bool:
     """Check if a line matches known headers/noise to skip."""
     lower = line.lower().strip()
-    for skip in SKIP_PATTERNS:
-        if skip in lower:
-            return True
-    return False
+    return any(skip in lower for skip in SKIP_PATTERNS)
 
 
 def _is_title_name(name: str) -> bool:
@@ -115,9 +117,7 @@ def _is_valid_name(name: str) -> bool:
     if len(alpha) < 2:
         return False
     # Filter pure timestamps like "00:02"
-    if re.match(r"^[\d:]+$", name):
-        return False
-    return True
+    return not re.match(r"^[\d:]+$", name)
 
 
 def _detect_screen_type(text: str) -> str:
@@ -175,7 +175,8 @@ def _parse_app_list(text: str) -> list[DataEntry]:
 
 
 def _parse_service_list_inline(text: str) -> list[DataEntry]:
-    """Parse service list layout where name and value appear on the same line.
+    """
+    Parse service list layout where name and value appear on the same line.
 
     Used with PSM 6 output for Systemdienste screenshots.
     """
@@ -213,7 +214,8 @@ def _parse_service_list_inline(text: str) -> list[DataEntry]:
 
 
 def _parse_psm4_app_list(text: str) -> list[DataEntry]:
-    """Parse PSM 4 output for app list screenshots.
+    """
+    Parse PSM 4 output for app list screenshots.
 
     PSM 4 captures app names that PSM 3 misses (due to icon interference).
     Names and values may be on the same line or adjacent lines.
@@ -269,7 +271,8 @@ def _correct_name_disagreements(
     secondary: list[DataEntry],
     img: Image.Image,
 ) -> list[DataEntry]:
-    """Fix entry names where primary and secondary OCR disagree.
+    """
+    Fix entry names where primary and secondary OCR disagree.
 
     When two passes produce near-identical names (edit distance 1-2) for the
     same value, re-OCR the name region at 2x scale to get the correct spelling.
@@ -333,7 +336,8 @@ def _correct_name_disagreements(
 
 
 def _run_dual_ocr(img: Image.Image, screen_type: str) -> list[DataEntry]:
-    """Run dual-language OCR and merge results.
+    """
+    Run dual-language OCR and merge results.
 
     Primary: deu+eng (best for numbers overall)
     Secondary: deu (catches different errors, better for umlauts)
@@ -351,10 +355,8 @@ def _run_dual_ocr(img: Image.Image, screen_type: str) -> list[DataEntry]:
         psm3_kb_values: list[float] = []
         for val_str, unit in psm3_values:
             if unit.lower() != "byte":
-                try:
+                with contextlib.suppress(ValueError):
                     psm3_kb_values.append(convert_to_kb(val_str, unit))
-                except ValueError:
-                    pass
         # Replace values positionally when PSM 3 value has a decimal
         for i, entry in enumerate(entries_primary):
             if i < len(psm3_kb_values) and entry.data_volume_kb != psm3_kb_values[i]:
@@ -384,7 +386,8 @@ def _run_dual_ocr(img: Image.Image, screen_type: str) -> list[DataEntry]:
 
 
 def _normalize_name(name: str) -> str:
-    """Normalize a name for dedup comparison.
+    """
+    Normalize a name for dedup comparison.
 
     Handles OCR variants like Ö→O, i→l, co→©→∞, Homekit→HomeKit.
     """
@@ -413,7 +416,8 @@ def _merge_entries_by_name(
 def _merge_dual_entries(
     primary: list[DataEntry], secondary: list[DataEntry]
 ) -> list[DataEntry]:
-    """Merge deu+eng (primary) and deu (secondary) OCR results.
+    """
+    Merge deu+eng (primary) and deu (secondary) OCR results.
 
     For entries with the same name: prefer the value with a decimal separator
     (fixes dropped-comma issues where one language setting preserves the comma).
@@ -466,7 +470,8 @@ def _edit_distance(a: str, b: str) -> int:
 
 
 def _is_noisy_duplicate(candidate: DataEntry, existing: list[DataEntry]) -> bool:
-    """Check if a candidate entry is a noisy duplicate of an existing entry.
+    """
+    Check if a candidate entry is a noisy duplicate of an existing entry.
 
     Detects cases like "Qo Signal" being a noisy version of "Signal",
     "Decathion" being a garbled "Decathlon", or "MyrFitnessPal" for "MyFitnessPal".
@@ -478,9 +483,8 @@ def _is_noisy_duplicate(candidate: DataEntry, existing: list[DataEntry]) -> bool
             return True
         # Check substring relationship with length ratio > 0.5
         shorter, longer = sorted([ent_norm, cand_norm], key=len)
-        if len(shorter) > 0 and len(shorter) / len(longer) > 0.5:
-            if shorter in longer:
-                return True
+        if len(shorter) > 0 and len(shorter) / len(longer) > 0.5 and shorter in longer:
+            return True
         # Check edit distance for similar-length names (catches OCR typos)
         if len(shorter) >= 5 and len(shorter) / len(longer) > 0.7:
             dist = _edit_distance(ent_norm, cand_norm)
@@ -490,7 +494,8 @@ def _is_noisy_duplicate(candidate: DataEntry, existing: list[DataEntry]) -> bool
 
 
 def _pick_better_value(primary: DataEntry, secondary: DataEntry) -> DataEntry:
-    """Pick the better value between deu+eng and deu OCR readings.
+    """
+    Pick the better value between deu+eng and deu OCR readings.
 
     When one value is much larger than the other (~10x-100x), the smaller one
     likely has the decimal separator preserved (dropped comma in the other).
@@ -499,7 +504,7 @@ def _pick_better_value(primary: DataEntry, secondary: DataEntry) -> DataEntry:
         ratio = primary.data_volume_kb / secondary.data_volume_kb
         if ratio > 5:
             return secondary
-        elif ratio < 0.2:
+        if ratio < 0.2:
             return primary
 
     # Default to primary (deu+eng)
@@ -507,7 +512,8 @@ def _pick_better_value(primary: DataEntry, secondary: DataEntry) -> DataEntry:
 
 
 def _fix_dropped_commas(entries: list[DataEntry], img: Image.Image) -> list[DataEntry]:
-    """Fix dropped commas by re-OCR'ing suspicious value regions.
+    """
+    Fix dropped commas by re-OCR'ing suspicious value regions.
 
     For values that are 3-digit integers (potential dropped comma), crop the
     specific region, preprocess, scale 8x, and re-OCR with eng PSM 7.
@@ -573,7 +579,8 @@ def _fix_dropped_commas(entries: list[DataEntry], img: Image.Image) -> list[Data
 def _reocr_value_region(
     img: Image.Image, x: int, y: int, w: int, h: int, pad: int = 15
 ) -> str | None:
-    """Re-OCR a specific value region at 8x scale with preprocessing.
+    """
+    Re-OCR a specific value region at 8x scale with preprocessing.
 
     Crops the region, converts to grayscale, thresholds to binary,
     scales 8x, and runs Tesseract in single-line mode with English.
@@ -599,7 +606,8 @@ def _reocr_value_region(
 def _recover_missing_entries(
     entries: list[DataEntry], img: Image.Image
 ) -> list[DataEntry]:
-    """Recover entries missed by text-based parsing.
+    """
+    Recover entries missed by text-based parsing.
 
     Uses two strategies:
     1. Position-based: image_to_data preserves correct spatial ordering,
@@ -680,9 +688,12 @@ def _recover_missing_entries(
     for i in range(len(data["text"])):
         text = str(data["text"][i]).strip()
         y = data["top"][i]
-        if re.match(r"^\d+[,.]?\d*$", text) and int(data["conf"][i]) > 50:
-            if any(abs(y - uy) < 30 for uy in unit_ys):
-                value_ys.append(y)
+        if (
+            re.match(r"^\d+[,.]?\d*$", text)
+            and int(data["conf"][i]) > 50
+            and any(abs(y - uy) < 30 for uy in unit_ys)
+        ):
+            value_ys.append(y)
     value_ys.sort()
 
     if len(value_ys) >= 3:
@@ -719,9 +730,9 @@ def _recover_missing_entries(
 
         # Re-OCR each gap region
         for y_start, y_end in gap_regions:
-            y_start = max(0, y_start)
-            y_end = min(img.height, y_end)
-            crop = img.crop((0, y_start, int(img.width * 0.65), y_end))
+            y0 = max(0, y_start)
+            y1 = min(img.height, y_end)
+            crop = img.crop((0, y0, int(img.width * 0.65), y1))
             text = pytesseract.image_to_string(
                 crop, lang="deu+eng", config="--psm 6"
             ).strip()

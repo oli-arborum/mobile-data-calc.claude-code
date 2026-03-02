@@ -24,6 +24,12 @@ uv run python -m extractor <input_folder> <database_path>
 uv run python -m unittest discover extractor/test/
 ```
 
+## Linting
+
+```bash
+uv run ruff check
+```
+
 ## Type Checking
 
 ```bash

@@ -27,7 +27,7 @@ def image_to_string(
     lang: str | None = None,
     config: str = "",
     nice: int = 0,
-    output_type: str = Output.STRING,
+    output_type: str = ...,
     timeout: int = 0,
 ) -> str: ...
 
@@ -36,6 +36,6 @@ def image_to_data(
     lang: str | None = None,
     config: str = "",
     nice: int = 0,
-    output_type: str = Output.DICT,
+    output_type: str = ...,
     timeout: int = 0,
 ) -> TesseractData: ...

@@ -1,3 +1,5 @@
+"""CLI entry point for the iOS data usage screenshot extractor."""
+
 from __future__ import annotations
 
 import argparse
@@ -55,8 +57,9 @@ def main() -> None:
         entries: list[DataEntry] = extract_entries(image_path)
 
         # Convert to database tuples
-        for entry in entries:
-            all_entries.append((year, month, entry.app_name, entry.data_volume_kb))
+        all_entries.extend(
+            (year, month, entry.app_name, entry.data_volume_kb) for entry in entries
+        )
 
     logger.info("Collected %d total entries from %d images", len(all_entries), len(image_files))
 

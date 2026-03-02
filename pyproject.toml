@@ -8,9 +8,26 @@ dependencies = [
     "pillow>=12.1.1",
     "pyright>=1.1.408",
     "pytesseract>=0.3.13",
+    "ruff>=0.15.4",
 ]
 
 [tool.pyright]
 pythonVersion = "3.14"
 include = ["extractor"]
 typeCheckingMode = "strict"
+
+[tool.ruff]
+line-length = 120
+src = ["extractor"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D103", "D104", "D203",  "D212", "COM812", "PLR2004",
+    "PLR0912", "PLR0913", "PLR0915", "EM102", "TRY003", "RET504", "TC003",
+    "C901"]
+
+[tool.ruff.lint.per-file-ignores]
+"test_*.py" = ["PT009", "PT027", "ANN201", "D101", "D102", "PLC0415", "ARG005"]

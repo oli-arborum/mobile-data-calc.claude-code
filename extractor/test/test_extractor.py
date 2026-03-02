@@ -1,4 +1,6 @@
 # pyright: reportUnknownLambdaType=false
+"""Tests for the iOS data usage screenshot extractor."""
+
 from __future__ import annotations
 
 import csv
@@ -52,7 +54,7 @@ class TestDateExtraction(unittest.TestCase):
 
     def test_january_wraps_to_december(self):
         """Verify month subtraction wraps correctly."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         from extractor.metadata import extract_reporting_month
 
@@ -91,10 +93,9 @@ class TestIntegration(unittest.TestCase):
             for image_path in image_files:
                 year, month = extract_reporting_month(image_path)
                 entries = extract_entries(image_path)
-                for entry in entries:
-                    all_entries.append(
-                        (year, month, entry.app_name, entry.data_volume_kb)
-                    )
+                all_entries.extend(
+                    (year, month, entry.app_name, entry.data_volume_kb) for entry in entries
+                )
 
             insert_entries(db_path, all_entries)
 
@@ -109,7 +110,7 @@ class TestIntegration(unittest.TestCase):
 
             # Read expected CSV
             csv_rows: set[tuple[int, int, str, float]] = set()
-            with open(DATA_CSV) as f:
+            with DATA_CSV.open() as f:
                 reader = csv.reader(f)
                 for row in reader:
                     if not row:
@@ -130,13 +131,13 @@ class TestIntegration(unittest.TestCase):
             self.assertEqual(
                 missing,
                 set(),
-                f"Missing from DB:\n"
+                "Missing from DB:\n"
                 + "\n".join(f"  {r}" for r in sorted(missing, key=lambda x: x[2])),
             )
             self.assertEqual(
                 extra,
                 set(),
-                f"Extra in DB:\n"
+                "Extra in DB:\n"
                 + "\n".join(f"  {r}" for r in sorted(extra, key=lambda x: x[2])),
             )
 

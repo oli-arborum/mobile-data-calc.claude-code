@@ -1,13 +1,16 @@
+"""EXIF metadata extraction for determining screenshot capture dates."""
+
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from PIL import Image
 
 
 def extract_reporting_month(image_path: Path) -> tuple[int, int]:
-    """Extract the reporting month from image EXIF data.
+    """
+    Extract the reporting month from image EXIF data.
 
     The reporting month is one month before the capture date, since iOS
     screenshots of data usage are taken at the start of the next month.
@@ -28,10 +31,9 @@ def extract_reporting_month(image_path: Path) -> tuple[int, int]:
     if timestamp_str is None:
         raise ValueError(f"No date metadata found in {image_path}")
 
-    capture_date = datetime.strptime(timestamp_str, "%Y:%m:%d %H:%M:%S")
+    capture_date = datetime.strptime(timestamp_str, "%Y:%m:%d %H:%M:%S").replace(tzinfo=UTC)
 
     # Subtract one month
     if capture_date.month == 1:
         return (capture_date.year - 1, 12)
-    else:
-        return (capture_date.year, capture_date.month - 1)
+    return (capture_date.year, capture_date.month - 1)
