@@ -304,7 +304,7 @@ def _correct_name_disagreements(
                         min(img.width, x + w + pad), min(img.height, y + h + pad),
                     ))
                     scaled = crop.resize(
-                        (crop.width * 2, crop.height * 2), Image.LANCZOS
+                        (crop.width * 2, crop.height * 2), Image.Resampling.LANCZOS
                     )
                     result = pytesseract.image_to_string(
                         scaled, lang="deu+eng", config="--psm 7"
@@ -580,9 +580,9 @@ def _reocr_value_region(
     gray = region.convert("L")
     enhancer = ImageEnhance.Contrast(gray)
     enhanced = enhancer.enhance(2.0)
-    binary = enhanced.point(lambda p: 255 if p > 128 else 0)
+    binary = enhanced.point([255 if p > 128 else 0 for p in range(256)])
     rw, rh = binary.size
-    scaled = binary.resize((rw * 8, rh * 8), Image.LANCZOS)
+    scaled = binary.resize((rw * 8, rh * 8), Image.Resampling.LANCZOS)
 
     result = pytesseract.image_to_string(scaled, lang="eng", config="--psm 7")
     return result.strip() if result else None

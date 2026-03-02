@@ -23,3 +23,9 @@ uv run python -m extractor <input_folder> <database_path>
 ```bash
 uv run python -m unittest discover extractor/test/
 ```
+
+## Type Checking
+
+```bash
+uv run pyright
+```
