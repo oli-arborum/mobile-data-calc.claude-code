@@ -1,3 +1,4 @@
+# pyright: reportUnknownLambdaType=false
 from __future__ import annotations
 
 import csv
@@ -8,7 +9,7 @@ from pathlib import Path
 
 from extractor.database import create_database, insert_entries
 from extractor.metadata import extract_reporting_month
-from extractor.ocr import DataEntry, convert_to_kb, extract_entries
+from extractor.ocr import convert_to_kb, extract_entries
 
 TEST_DIR = Path(__file__).parent
 INPUT_DIR = TEST_DIR / "input"

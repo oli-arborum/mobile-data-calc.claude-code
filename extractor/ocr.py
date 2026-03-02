@@ -4,6 +4,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypedDict
 
 import pytesseract
 from PIL import Image, ImageEnhance
@@ -31,6 +32,13 @@ TITLE_NAMES = {"systemdienste", "mobile datennutzung", "datennutzung"}
 class DataEntry:
     app_name: str
     data_volume_kb: float
+
+
+class _WordInfo(TypedDict):
+    text: str
+    y: int
+    x: int
+    conf: int
 
 
 def convert_to_kb(value_str: str, unit: str) -> float:
@@ -303,7 +311,7 @@ def _correct_name_disagreements(
                         max(0, x - pad), max(0, y - pad),
                         min(img.width, x + w + pad), min(img.height, y + h + pad),
                     ))
-                    scaled = crop.resize(
+                    scaled = crop.resize(  # pyright: ignore[reportUnknownMemberType]
                         (crop.width * 2, crop.height * 2), Image.Resampling.LANCZOS
                     )
                     result = pytesseract.image_to_string(
@@ -339,8 +347,8 @@ def _run_dual_ocr(img: Image.Image, screen_type: str) -> list[DataEntry]:
         # PSM 3 deu+eng gives more accurate values (preserves commas better)
         # Use it to fix values that PSM 6 dropped commas from
         text_psm3 = pytesseract.image_to_string(img, lang="deu+eng")
-        psm3_values = VOLUME_PATTERN.findall(text_psm3)
-        psm3_kb_values = []
+        psm3_values: list[tuple[str, str]] = VOLUME_PATTERN.findall(text_psm3)
+        psm3_kb_values: list[float] = []
         for val_str, unit in psm3_values:
             if unit.lower() != "byte":
                 try:
@@ -580,9 +588,9 @@ def _reocr_value_region(
     gray = region.convert("L")
     enhancer = ImageEnhance.Contrast(gray)
     enhanced = enhancer.enhance(2.0)
-    binary = enhanced.point([255 if p > 128 else 0 for p in range(256)])
+    binary = enhanced.point([255 if p > 128 else 0 for p in range(256)])  # pyright: ignore[reportUnknownMemberType]
     rw, rh = binary.size
-    scaled = binary.resize((rw * 8, rh * 8), Image.Resampling.LANCZOS)
+    scaled = binary.resize((rw * 8, rh * 8), Image.Resampling.LANCZOS)  # pyright: ignore[reportUnknownMemberType]
 
     result = pytesseract.image_to_string(scaled, lang="eng", config="--psm 7")
     return result.strip() if result else None
@@ -607,7 +615,7 @@ def _recover_missing_entries(
     recovered = list(entries)
 
     # Build word list from image_to_data
-    words: list[dict] = []
+    words: list[_WordInfo] = []
     for i in range(len(data["text"])):
         text = str(data["text"][i]).strip()
         if text and int(data["conf"][i]) > 0:
@@ -619,7 +627,7 @@ def _recover_missing_entries(
     # --- Step 1: Position-based recovery ---
     # Find name words not in our entries that have a value word below them.
     # This catches names that image_to_string misplaces (e.g., adidas).
-    unit_words = {
+    unit_words: dict[int, str] = {
         w["y"]: w["text"]
         for w in words
         if w["text"].upper() in ("MB", "KB", "GB") and w["conf"] > 50
