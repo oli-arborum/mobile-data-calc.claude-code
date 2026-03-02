@@ -65,6 +65,18 @@ A test set with 15 screenshots and 131 expected entries for January 2026 is incl
 uv run python -m unittest discover extractor/test/ -v
 ```
 
+### Linting
+
+```bash
+uv run ruff check
+```
+
+### Type checking
+
+```bash
+uv run pyright
+```
+
 ### OCR approach
 
 Tesseract alone struggles with iOS screenshots due to app icons, stylized fonts, and the German locale. The extractor uses several strategies to maximize accuracy:
