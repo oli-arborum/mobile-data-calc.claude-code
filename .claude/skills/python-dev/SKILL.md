@@ -1,5 +1,5 @@
 ---
-name: python-guidelines
+name: python-dev
 description: Python coding guidelines for building maintainable, and testable command-line tools. Use this skill when generating or modifying Python code.
 ---
 

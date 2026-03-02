@@ -31,3 +31,7 @@ ignore = ["D103", "D104", "D203",  "D212", "COM812", "PLR2004",
 
 [tool.ruff.lint.per-file-ignores]
 "test_*.py" = ["PT009", "PT027", "ANN201", "D101", "D102", "PLC0415", "ARG005"]
+
+[tool.mypy]
+# although we use pyright for main type checking, mypy is still useful for editor integration and some checks
+mypy_path = "typings"
