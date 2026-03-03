@@ -11,11 +11,13 @@ Managed via `uv`. Install with `uv sync`.
 
 - **Pillow**: Image handling and EXIF metadata extraction
 - **pytesseract**: Python wrapper for Tesseract OCR
+- **ruff**: Linting and formatting
+- **pyright**: Static type checking
 
 ## Running
 
 ```bash
-uv run python -m extractor <input_folder> <database_path>
+uv run extractor.py [-i INPUT_PATH] [-d DB]
 ```
 
 ## Testing

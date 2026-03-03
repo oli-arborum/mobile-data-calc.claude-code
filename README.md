@@ -35,13 +35,18 @@ uv sync
 ### Usage
 
 ```bash
-uv run python -m extractor <input_folder> <database_path>
+uv run extractor.py [-i INPUT_PATH] [-d DB]
 ```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-i`, `--input-path` | `./images` | Folder containing screenshot images |
+| `-d`, `--db` | `data_usage.sqlite` | Path to SQLite database file |
 
 **Example:**
 
 ```bash
-uv run python -m extractor ~/screenshots/ usage.db
+uv run extractor.py -i ~/screenshots/ -d usage.db
 ```
 
 This processes all PNG/JPG screenshots in the input folder and writes the extracted data to `usage.db`.
@@ -91,17 +96,18 @@ Tesseract alone struggles with iOS screenshots due to app icons, stylized fonts,
 ## Project structure
 
 ```
+extractor.py               Convenience wrapper for `uv run extractor.py`
 extractor/
   __init__.py
-  __main__.py        CLI entry point (argparse)
-  metadata.py        EXIF date extraction
-  ocr.py             OCR + parsing (dual-language, gap recovery, name correction)
-  database.py        SQLite operations
+  __main__.py              CLI entry point (argparse)
+  metadata.py              EXIF date extraction
+  ocr.py                   OCR + parsing (dual-language, gap recovery, name correction)
+  database.py              SQLite operations
   test/
     __init__.py
     test_extractor.py
-    data.csv           Expected output (131 entries)
-    input/             15 iOS screenshots
+    data.csv               Expected output (131 entries)
+    input/                 15 iOS screenshots
 specifications/
-  extractor.md         Detailed specification
+  extractor.md             Detailed specification
 ```

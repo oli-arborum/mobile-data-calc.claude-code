@@ -17,14 +17,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Extract per-app mobile data usage from iOS screenshots.",
     )
-    parser.add_argument("input_folder", type=Path, help="Folder containing screenshot images")
-    parser.add_argument("database", type=Path, help="Path to SQLite database file")
+    parser.add_argument(
+        "-i", "--input-path", type=Path, default=Path("./images"),
+        help="Folder containing screenshot images (default: ./images)",
+    )
+    parser.add_argument(
+        "-d", "--db", type=Path, default=Path("data_usage.sqlite"),
+        help="Path to SQLite database file (default: data_usage.sqlite)",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    input_folder: Path = args.input_folder
-    db_path: Path = args.database
+    input_folder: Path = args.input_path
+    db_path: Path = args.db
 
     if not input_folder.is_dir():
         logger.error("Input folder does not exist: %s", input_folder)
